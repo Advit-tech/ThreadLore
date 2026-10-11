@@ -53,7 +53,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    print(f"[*] ThreadSift DiscordChatExporter: Exporting channel {args.channel}...")
+    print(f"[*] ThreadLore DiscordChatExporter: Exporting channel {args.channel}...")
     output_path = Path(args.output).resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)
 

@@ -1,5 +1,5 @@
 """
-ThreadSift - Local-First Chat Intelligence Database Engine
+ThreadLore - Local-First Chat Intelligence Database Engine
 Manages SQLite database, FTS5 full-text indexing, BM25 ranking, and 90-day archive queries.
 """
 

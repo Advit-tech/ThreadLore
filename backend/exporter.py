@@ -1,5 +1,5 @@
 """
-ThreadSift - DiscordChatExporter Automation Wrapper
+ThreadLore - DiscordChatExporter Automation Wrapper
 Executes DiscordChatExporter.Cli via subprocess, parses exported JSON,
 and ingests messages into the local SQLite FTS5 database.
 """
@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from backend.db import insert_messages
 
-logger = logging.getLogger("threadsift.exporter")
+logger = logging.getLogger("threadlore.exporter")
 BASE_DIR = Path(__file__).resolve().parent
 DEFAULT_BIN_DIR = BASE_DIR / "bin"
 DEFAULT_DATA_DIR = BASE_DIR / "data" / "exports"
@@ -55,7 +55,7 @@ def find_exporter_cli() -> Optional[str]:
 
 def parse_discord_dict(data: Dict[str, Any], channel_id_fallback: str = "discord-channel") -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Parses a DiscordChatExporter dictionary structure into standardized ThreadSift messages.
+    Parses a DiscordChatExporter dictionary structure into standardized ThreadLore messages.
     """
     meta = {
         "guild": data.get("guild", {}),
@@ -109,7 +109,7 @@ def parse_discord_dict(data: Dict[str, Any], channel_id_fallback: str = "discord
 
 def parse_discord_json(file_path: Path, channel_id_fallback: str = "discord-channel") -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """
-    Parses a DiscordChatExporter JSON output file into standardized ThreadSift messages.
+    Parses a DiscordChatExporter JSON output file into standardized ThreadLore messages.
     """
     with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -251,7 +251,7 @@ def generate_sample_archive_data(days: int = 90) -> List[Dict[str, Any]]:
         ("product", "Marcus_PM", 12, "Customer feedback on the 90-day search retention: Users love finding lost engineering decisions from 2 months ago in under 15 milliseconds."),
         ("product", "Devin_QA", 11, "One request from power users: Can we filter search queries both by channel and by author simultaneously in the dashboard?"),
         ("product", "Kaelen_Backend", 10, "Already added! The `/api/search` endpoint accepts `channel_id`, `author`, `days`, and `limit` as optional query parameters."),
-        ("product", "Marcus_PM", 9, "ThreadSift v1.0 release date is confirmed for the 25th. All documentation and Agent Skill Open Standard specs need to be finalized by Friday."),
+        ("product", "Marcus_PM", 9, "ThreadLore v1.0 release date is confirmed for the 25th. All documentation and Agent Skill Open Standard specs need to be finalized by Friday."),
 
         # Channel: dev-core (Audio & ElevenLabs)
         ("dev-core", "Aria_VoiceAI", 15, "Voice call mode update: Added fallback to browser Web Speech Synthesis if the ElevenLabs API key is absent or quota is exceeded."),
@@ -267,7 +267,7 @@ def generate_sample_archive_data(days: int = 90) -> List[Dict[str, Any]]:
         ("operations", "Kaelen_Backend", 34, "FTS5 indexes are remarkably lean. We can easily scale to 1 year archives if needed, but the 90-day rolling window is optimal for working memory."),
 
         # Channel: general
-        ("general", "Marcus_PM", 45, "Team lunch celebrating the ThreadSift project milestone this Thursday at noon! Tacos are on engineering."),
+        ("general", "Marcus_PM", 45, "Team lunch celebrating the ThreadLore project milestone this Thursday at noon! Tacos are on engineering."),
         ("general", "Cipher_ML", 45, "Count me in! Celebrating sub-second RAG latency with extra guacamole."),
         ("general", "Aria_VoiceAI", 44, "Will be there. Can we demo the live voice agent ordering our tacos? 😄"),
         ("general", "Nova_LeadArchitect", 44, "Haha, only if Hermes 3 remembers that Elena is allergic to cilantro!"),
@@ -282,7 +282,7 @@ def generate_sample_archive_data(days: int = 90) -> List[Dict[str, Any]]:
 
         # Channel: research-hermes
         ("research-hermes", "Cipher_ML", 85, "Initial experimentation with Gemma 2 and Hermes 3 on local quantization: 4-bit AWQ provides almost identical retrieval synthesis quality with half the VRAM."),
-        ("research-hermes", "Nova_LeadArchitect", 84, "That means ThreadSift can run locally on an 8GB laptop GPU or Apple Silicon unified memory with zero cloud dependencies."),
+        ("research-hermes", "Nova_LeadArchitect", 84, "That means ThreadLore can run locally on an 8GB laptop GPU or Apple Silicon unified memory with zero cloud dependencies."),
     ]
 
     messages: List[Dict[str, Any]] = []

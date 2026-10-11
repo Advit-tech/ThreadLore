@@ -1,5 +1,5 @@
 """
-ThreadSift - ElevenLabs Expressive Voice Integration Helper
+ThreadLore - ElevenLabs Expressive Voice Integration Helper
 Handles REST API calls to ElevenLabs Text-to-Speech (TTS), voice configurations,
 and streaming audio response generation.
 """
@@ -9,7 +9,7 @@ import os
 from typing import Any, Dict, List, Optional
 import httpx
 
-logger = logging.getLogger("threadsift.voice")
+logger = logging.getLogger("threadlore.voice")
 
 # Default voice settings
 DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Rachel (expressive, natural)

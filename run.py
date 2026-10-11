@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ThreadSift - One-Click Application Startup Script
+ThreadLore - One-Click Application Startup Script
 Initializes the database, checks configurations, and launches the FastAPI server.
 """
 
@@ -47,7 +47,7 @@ def print_banner(host: str, port: int):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ThreadSift - Local-First Chat Intelligence")
+    parser = argparse.ArgumentParser(description="ThreadLore - Local-First Chat Intelligence")
     parser.add_argument("--host", default=os.getenv("HOST", "127.0.0.1"), help="Host to bind server to")
     parser.add_argument("--port", type=int, default=int(os.getenv("PORT", 8000)), help="Port to bind server to")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")

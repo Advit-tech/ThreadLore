@@ -1,5 +1,5 @@
 """
-ThreadSift - Local-First Chat Intelligence Dashboard
+ThreadLore - Local-First Chat Intelligence Dashboard
 FastAPI Application, RAG Retrieval, Hermes LLM Inference, and Voice Loop Handlers.
 """
 
@@ -44,7 +44,7 @@ load_dotenv()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger("threadsift")
+logger = logging.getLogger("threadlore")
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
@@ -62,14 +62,14 @@ CONFIG = {
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup initialization and teardown."""
-    logger.info("Initializing ThreadSift Chat Intelligence Engine...")
+    logger.info("Initializing ThreadLore Chat Intelligence Engine...")
     init_db()
     yield
-    logger.info("ThreadSift shutting down gracefully.")
+    logger.info("ThreadLore shutting down gracefully.")
 
 
 app = FastAPI(
-    title="ThreadSift",
+    title="ThreadLore",
     description="Local-first Discord chat intelligence dashboard with FTS5 search, Hermes LLM, and live voice calls.",
     version="1.0.0",
     lifespan=lifespan,
@@ -163,7 +163,7 @@ async def call_hermes_llm(
     Includes intelligent fallback synthesis if the local LLM server is not currently running.
     """
     system_instruction = (
-        "You are ThreadSift, an expert AI chat intelligence assistant powered by Nous Research Hermes 3. "
+        "You are ThreadLore, an expert AI chat intelligence assistant powered by Nous Research Hermes 3. "
         "You have direct access to a 90-day SQLite FTS5 conversation archive of team Discord channels.\n\n"
         "Instructions:\n"
         "1. Ground your answers directly in the provided 90-day Discord conversation context whenever relevant.\n"
@@ -225,12 +225,12 @@ async def call_hermes_llm(
     except Exception as e:
         logger.warning(f"Could not reach LLM endpoint at {endpoint}: {e}")
 
-    # Fallback Synthesis Mode (Ensures ThreadSift remains functional even without local LLM running)
+    # Fallback Synthesis Mode (Ensures ThreadLore remains functional even without local LLM running)
     if "No specific past messages" in rag_context:
         if voice_mode:
             return "I searched the 90-day Discord archive, but couldn't find any messages matching that query. Could you try rephrasing or asking about a specific channel or team member?"
         return (
-            "**ThreadSift Intelligent Search:**\n\n"
+            "**ThreadLore Intelligent Search:**\n\n"
             "No matching messages were found in the 90-day Discord vault for your inquiry.\n\n"
             "> *Note: Local LLM endpoint is currently offline or unreachable at `"
             + CONFIG["llm_base_url"]
@@ -249,13 +249,13 @@ async def call_hermes_llm(
         return summary_voice
 
     summary_md = (
-        f"### ThreadSift Vault Synthesis\n\n"
+        f"### ThreadLore Vault Synthesis\n\n"
         f"Retrieved **{len(context_lines)} relevant records** from the 90-day archive for your inquiry:\n\n"
     )
     for item in top_items:
         summary_md += f"- `{item}`\n"
     summary_md += (
-        f"\n\n*(Synthesis generated via ThreadSift local FTS5 indexing. To enable generative Hermes 3 reasoning, connect an OpenAI-compatible endpoint at `{CONFIG['llm_base_url']}`)*"
+        f"\n\n*(Synthesis generated via ThreadLore local FTS5 indexing. To enable generative Hermes 3 reasoning, connect an OpenAI-compatible endpoint at `{CONFIG['llm_base_url']}`)*"
     )
     return summary_md
 
@@ -272,7 +272,7 @@ async def get_status():
 
     return {
         "status": "healthy",
-        "app_name": "ThreadSift",
+        "app_name": "ThreadLore",
         "version": "1.0.0",
         "vault": vault_stats,
         "exporter": {
@@ -530,4 +530,4 @@ async def serve_index():
     index_file = FRONTEND_DIR / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
-    return {"message": "ThreadSift API is running. Place index.html in frontend/"}
+    return {"message": "ThreadLore API is running. Place index.html in frontend/"}

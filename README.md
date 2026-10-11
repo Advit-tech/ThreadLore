@@ -1,4 +1,4 @@
-# ThreadSift 🎙️🔍
+# ThreadLore 🎙️🔍
 
 **Local-First Discord Chat Intelligence Dashboard & Live Voice Agent**  
 *Agent Skill Open Standard Compliant • SQLite FTS5 BM25 Retrieval • Nous Hermes 3 RAG • ElevenLabs Voice Pipeline*
@@ -36,7 +36,7 @@
 ## 📁 Project Architecture
 
 ```
-thread-sift/
+threadlore/
 ├── backend/
 │   ├── main.py                  # FastAPI application, route handlers, RAG synthesis
 │   ├── db.py                    # SQLite schema, FTS5 virtual table, BM25 90-day engine
@@ -73,7 +73,7 @@ thread-sift/
 ### 2. Installation
 ```bash
 # Clone or navigate to the project directory
-cd thread-sift
+cd threadlore
 
 # Create and activate virtual environment
 python -m venv venv
@@ -86,7 +86,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Launch ThreadSift
+### 3. Launch ThreadLore
 ```bash
 python run.py
 ```
@@ -118,7 +118,7 @@ python skill/scripts/query_vault.py --query "What is the deployment schedule?" -
 
 ## ⚡ Simplified Workflow: From Zero to Voice Call in 2 Minutes
 
-You can initialize and run ThreadSift in 3 simple steps:
+You can initialize and run ThreadLore in 3 simple steps:
 
 ```mermaid
 flowchart LR
@@ -126,7 +126,7 @@ flowchart LR
     B --> C["3. Search & Voice<br/>(Hermes 3 + TTS)"]
 ```
 
-### Step 1: Start ThreadSift
+### Step 1: Start ThreadLore
 ```bash
 python run.py
 ```
@@ -149,17 +149,17 @@ Go to the **Exporter** tab in the dashboard. Choose either:
 
 > **Why you don't need a bot**:  
 > Most Discord skills force you to create a bot in the Discord Developer Portal and beg a server administrator to add it with message read permissions. **You almost never have admin rights on servers you care about.**  
-> ThreadSift solves this completely. You have 3 bot-free ways to ingest Discord conversations:
+> ThreadLore solves this completely. You have 3 bot-free ways to ingest Discord conversations:
 
-### Method A: Drag & Drop JSON (Easiest — 100% Offline & No Token in ThreadSift)
+### Method A: Drag & Drop JSON (Easiest — 100% Offline & No Token in ThreadLore)
 1. Download the standalone, open-source [DiscordChatExporter GUI](https://github.com/Tyrrrz/DiscordChatExporter/releases) desktop app.
 2. In DiscordChatExporter GUI, paste your personal user token once. It will list all servers and DMs you are a member of.
 3. Select any channel you want to sift, choose **JSON** format, and export it.
-4. In ThreadSift, go to the **Exporter** tab and simply **drag and drop the exported `.json` file into the upload zone**.
-5. ThreadSift immediately parses all messages, normalizes timestamps, indexes them in SQLite FTS5, and rebuilds BM25 search rankings!
+4. In ThreadLore, go to the **Exporter** tab and simply **drag and drop the exported `.json` file into the upload zone**.
+5. ThreadLore immediately parses all messages, normalizes timestamps, indexes them in SQLite FTS5, and rebuilds BM25 search rankings!
 
 ### Method B: Automated CLI Export Using Your Personal User Token
-ThreadSift can run the export subprocess automatically using your personal user token:
+ThreadLore can run the export subprocess automatically using your personal user token:
 
 #### 🕒 How to Get Your Personal User Token in 10 Seconds (Zero Admin Rights Needed):
 1. Open Discord in your web browser (Chrome, Edge, or Firefox) at [discord.com/app](https://discord.com/app).
@@ -168,11 +168,11 @@ ThreadSift can run the export subprocess automatically using your personal user 
 4. Click into any server or send any message.
 5. In the Network filter, look for any request named `messages`, `@me`, or `science`.
 6. Click the request, look at the **Request Headers** section, and copy the value of `authorization`.
-7. Paste this token into ThreadSift's Exporter tab with your target Channel ID.
+7. Paste this token into ThreadLore's Exporter tab with your target Channel ID.
 8. **Keep "Is Bot Token" unchecked!**
-9. Click **Run Subprocess Export**. ThreadSift will export and ingest the last 90 days automatically.
+9. Click **Run Subprocess Export**. ThreadLore will export and ingest the last 90 days automatically.
 
-*(Note: Discord tokens should be kept private on your machine. ThreadSift operates locally and never transmits your token to any third-party server).*
+*(Note: Discord tokens should be kept private on your machine. ThreadLore operates locally and never transmits your token to any third-party server).*
 
 ### Method C: 1-Click Instant Demo Archive
 If you just want to test Hermes 3 synthesis, voice calls, and FTS5 search right away:
@@ -186,14 +186,14 @@ This seeds 90 days of realistic conversations across `#dev-core`, `#research-her
 
 ## 🧠 Serving Hermes 3 with Ollama (Zero Port Collisions)
 
-ThreadSift's FastAPI server runs on port **8000** (`http://localhost:8000`).  
+ThreadLore's FastAPI server runs on port **8000** (`http://localhost:8000`).  
 Hermes 3 runs on Ollama's standard port **11434** (`http://localhost:11434`).
 
 1. **Pull and run Hermes 3 in Ollama**:
    ```bash
    ollama run hermes3
    ```
-2. In ThreadSift's **Config** tab (or in `.env`), the default is already set to:
+2. In ThreadLore's **Config** tab (or in `.env`), the default is already set to:
    - **LLM Base URL**: `http://localhost:11434/v1`
    - **Model Name**: `hermes3`
    - **API Key**: `ollama` (or any string)

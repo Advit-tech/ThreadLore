@@ -1,9 +1,9 @@
 ---
-name: threadsift-chat-intelligence
+name: threadlore-chat-intelligence
 version: 1.0.0
 description: |
   Local-first chat intelligence agent skill for searching, retrieving, and synthesizing Discord conversation archives over a 90-day rolling window using SQLite FTS5 with BM25 ranking, Hermes LLM, and ElevenLabs voice output.
-author: ThreadSift
+author: ThreadLore
 license: MIT
 tags:
   - discord
@@ -51,9 +51,9 @@ tools:
         required: false
 ---
 
-# ThreadSift Chat Intelligence Skill
+# ThreadLore Chat Intelligence Skill
 
-ThreadSift enables AI agents and local developers to inspect, search, and synthesize conversations exported from Discord channels across a rolling 90-day window.
+ThreadLore enables AI agents and local developers to inspect, search, and synthesize conversations exported from Discord channels across a rolling 90-day window.
 
 ## Capabilities
 

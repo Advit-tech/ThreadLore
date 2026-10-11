@@ -1,5 +1,5 @@
 /**
- * ThreadSift - Frontend Application Logic
+ * ThreadLore - Frontend Application Logic
  * Implements FTS5 BM25 search, Hermes RAG chat, Web Speech API live voice call, and Exporter runner.
  */
 
@@ -233,7 +233,7 @@ function exportSearchResultsJSON() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `threadsift_export_${Date.now()}.json`;
+  a.download = `threadlore_export_${Date.now()}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ThreadSift - Agent Skill Standalone Vault Query & Synthesis Tool
+ThreadLore - Agent Skill Standalone Vault Query & Synthesis Tool
 Complies with Agent Skill Open Standard.
 Queries SQLite FTS5 database, ranks results with BM25, and optionally synthesizes answers via Hermes LLM.
 """
@@ -56,9 +56,9 @@ def format_table(rows: List[Dict[str, Any]]) -> str:
 def format_markdown(rows: List[Dict[str, Any]], query: str) -> str:
     """Formats results as structured Markdown."""
     if not rows:
-        return f"### ThreadSift Search: `{query}`\n\n*No messages found matching this query in the 90-day window.*"
+        return f"### ThreadLore Search: `{query}`\n\n*No messages found matching this query in the 90-day window.*"
 
-    out = [f"### ThreadSift Search: `{query}` ({len(rows)} results)\n"]
+    out = [f"### ThreadLore Search: `{query}` ({len(rows)} results)\n"]
     for i, r in enumerate(rows, 1):
         ts = r.get("timestamp", "")[:19].replace("T", " ")
         ch = r.get("channel_id", "unknown")
@@ -93,7 +93,7 @@ def run_llm_synthesis(
     rag_text = "\n".join(context_lines)
 
     prompt = (
-        f"You are ThreadSift, an expert AI analyst powered by Nous Hermes 3.\n"
+        f"You are ThreadLore, an expert AI analyst powered by Nous Hermes 3.\n"
         f"Synthesize an executive summary answering the user query based ONLY on the provided 90-day Discord archive.\n\n"
         f"User Query: {query}\n\n"
         f"Retrieved Discord Messages:\n{rag_text}\n\n"
@@ -108,7 +108,7 @@ def run_llm_synthesis(
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are ThreadSift powered by Nous Hermes 3."},
+            {"role": "system", "content": "You are ThreadLore powered by Nous Hermes 3."},
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.7,
@@ -122,7 +122,7 @@ def run_llm_synthesis(
             return data["choices"][0]["message"]["content"]
     except Exception as e:
         # Fallback offline synthesis
-        lines = [f"**ThreadSift Local Synthesis (Offline Mode)**"]
+        lines = [f"**ThreadLore Local Synthesis (Offline Mode)**"]
         lines.append(f"Retrieved {len(records)} relevant messages from the 90-day archive:")
         for r in records[:5]:
             lines.append(f"- **{r.get('author')}** in `#{r.get('channel_id')}`: \"{r.get('content')}\"")
@@ -131,7 +131,7 @@ def run_llm_synthesis(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ThreadSift - Agent Skill Vault Query")
+    parser = argparse.ArgumentParser(description="ThreadLore - Agent Skill Vault Query")
     parser.add_argument("-q", "--query", required=True, help="Search query or keyword")
     parser.add_argument("-c", "--channel", default=None, help="Filter by channel ID")
     parser.add_argument("-d", "--days", type=int, default=90, help="History window in days (default: 90)")
