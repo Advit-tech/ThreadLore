@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThreadSift - Local-First Chat Intelligence & Voice Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'ripple': 'ripple 2s linear infinite',
+            'spin-slow': 'spin 8s linear infinite',
+          },
+          keyframes: {
+            ripple: {
+              '0%': { transform: 'scale(0.95)', opacity: '0.8' },
+              '50%': { transform: 'scale(1.15)', opacity: '0.4' },
+              '100%': { transform: 'scale(0.95)', opacity: '0.8' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar and ambient glow */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-subtle {
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    mark {
+      background: rgba(245, 158, 11, 0.35);
+      color: #fef08a;
+      padding: 0.1rem 0.3rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+    }
+    /* Voice visualizer aura */
+    .visualizer-idle {
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(99, 102, 241, 0.2);
+    }
+    .visualizer-listening {
+      box-shadow: 0 0 60px rgba(16, 185, 129, 0.5), inset 0 0 30px rgba(16, 185, 129, 0.3);
+      animation: ripple 1.8s infinite ease-in-out;
+    }
+    .visualizer-thinking {
+      box-shadow: 0 0 60px rgba(168, 85, 247, 0.6), inset 0 0 30px rgba(168, 85, 247, 0.4);
+      animation: pulse 1s infinite alternate;
+    }
+    .visualizer-speaking {
+      box-shadow: 0 0 70px rgba(59, 130, 246, 0.65), inset 0 0 35px rgba(59, 130, 246, 0.4);
+      animation: ripple 1.2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- Ambient background lighting -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 left-1/3 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <!-- Logo & Branding -->
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">ThreadSift</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">v1.0 FTS5</span>
+          </div>
+          <p class="text-xs text-slate-400">90-Day Discord Intelligence & Voice Agent</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-sm font-medium overflow-x-auto">
+        <button id="tabBtn-search" onclick="switchTab('search')" class="tab-btn px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all bg-indigo-600 text-white shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <span>Vault Search</span>
+        </button>
+        <button id="tabBtn-voice" onclick="switchTab('voice')" class="tab-btn px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-slate-400 hover:text-white transition-all hover:bg-slate-800/60">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span>Live Voice Call</span>
+        </button>
+        <button id="tabBtn-chat" onclick="switchTab('chat')" class="tab-btn px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-slate-400 hover:text-white transition-all hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <span>Hermes RAG</span>
+        </button>
+        <button id="tabBtn-export" onclick="switchTab('export')" class="tab-btn px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-slate-400 hover:text-white transition-all hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          <span>Exporter</span>
+        </button>
+        <button id="tabBtn-settings" onclick="switchTab('settings')" class="tab-btn px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-slate-400 hover:text-white transition-all hover:bg-slate-800/60">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span>Config</span>
+        </button>
+      </nav>
+
+      <!-- Status Indicators -->
+      <div class="hidden xl:flex items-center gap-3 text-xs font-mono">
+        <div id="stat-vault" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="text-slate-400">Vault:</span>
+          <span id="stat-total-msgs" class="text-slate-200 font-semibold">-- msgs</span>
+        </div>
+        <div id="stat-llm" class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2">
+          <span id="stat-llm-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+          <span class="text-slate-400">Hermes:</span>
+          <span id="stat-llm-text" class="text-slate-200">checking</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Viewports -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 z-10 flex flex-col">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: VAULT SEARCH (SQLite FTS5 + BM25)   -->
+    <!-- ========================================== -->
+    <section id="view-search" class="tab-view space-y-6">
+      <!-- Search Header & Controls -->
+      <div class="glass-card rounded-2xl p-6 shadow-xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>90-Day Conversation Archive</span>
+              <span class="text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md font-mono">BM25 Ranking</span>
+            </h2>
+            <p class="text-sm text-slate-400">High-speed full-text indexing powered by SQLite virtual table and BM25 relevance scoring.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="switchTab('export')" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 transition-colors flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>+ Import Discord Data</span>
+            </button>
+            <button onclick="exportSearchResultsJSON()" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 transition-colors flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>Export JSON</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar & Filters -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+          <div class="md:col-span-6 relative">
+            <input 
+              type="text" 
+              id="search-input" 
+              placeholder="Search your Discord conversations or ask a question..." 
+              class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-4 py-3 pl-11 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm font-sans"
+              onkeydown="if(event.key === 'Enter') executeSearch()"
+            >
+            <svg class="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+
+          <div class="md:col-span-3">
+            <select id="channel-filter" onchange="executeSearch()" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-3 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">All Channels (#)</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-3 flex gap-2">
+            <select id="days-filter" onchange="executeSearch()" class="w-1/2 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-3 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="90" selected>Last 90 Days</option>
+              <option value="60">Last 60 Days</option>
+              <option value="30">Last 30 Days</option>
+              <option value="14">Last 14 Days</option>
+              <option value="7">Last 7 Days</option>
+            </select>
+            <button onclick="executeSearch()" class="w-1/2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl px-4 py-3 text-sm transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-1.5">
+              <span>Search</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Tip -->
+        <div class="mt-3 flex items-center gap-2 text-xs text-slate-400">
+          <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Tip: Use double quotes for exact phrase match (e.g. <code class="text-indigo-300 font-mono">"meeting notes"</code>), or type any keyword or natural question.</span>
+        </div>
+      </div>
+
+      <!-- Results Meta Bar -->
+      <div class="flex items-center justify-between text-xs font-mono text-slate-400 px-2">
+        <div id="results-count">Showing archive messages...</div>
+        <div id="search-latency"></div>
+      </div>
+
+      <!-- Results Container -->
+      <div id="search-results-list" class="space-y-3">
+        <!-- Message cards rendered via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: LIVE VOICE CALL (STT -> Hermes -> TTS) -->
+    <!-- ========================================== -->
+    <section id="view-voice" class="tab-view hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Voice Interactive Call Terminal -->
+        <div class="lg:col-span-7 glass-card rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-between min-h-[580px] text-center relative overflow-hidden">
+          
+          <!-- Top Call Status Indicator -->
+          <div class="w-full flex items-center justify-between border-b border-slate-800/80 pb-4">
+            <div class="flex items-center gap-2">
+              <span id="voice-status-pill" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                <span class="w-2 h-2 rounded-full bg-slate-500 mr-2" id="voice-pill-dot"></span>
+                <span id="voice-status-text">Ready to Connect</span>
+              </span>
+            </div>
+            <div class="text-xs text-slate-400 font-mono flex items-center gap-2">
+              <span>Engine:</span>
+              <span id="tts-engine-badge" class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">ElevenLabs Turbo / WebTTS</span>
+            </div>
+          </div>
+
+          <!-- Central Pulsing Sphere / Visualizer -->
+          <div class="my-8 flex flex-col items-center justify-center relative">
+            <div id="voice-sphere" class="w-48 h-48 sm:w-56 sm:h-56 rounded-full visualizer-idle bg-gradient-to-tr from-indigo-950 via-slate-900 to-indigo-900 border border-indigo-500/30 flex items-center justify-center transition-all duration-500 relative">
+              <!-- Inner spinning rings -->
+              <div class="absolute inset-4 rounded-full border border-indigo-400/20 animate-spin-slow"></div>
+              <div class="absolute inset-8 rounded-full border border-violet-400/20 animate-spin-slow" style="animation-direction: reverse;"></div>
+              
+              <!-- Core Voice Icon -->
+              <div id="voice-sphere-icon" class="w-20 h-20 rounded-full bg-slate-900/90 border border-indigo-500/40 flex items-center justify-center text-indigo-400 shadow-inner">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Visual State Label -->
+            <div class="mt-6">
+              <h3 id="voice-state-title" class="text-xl font-bold text-white tracking-wide">Interactive Voice Call</h3>
+              <p id="voice-state-sub" class="text-sm text-slate-400 mt-1 max-w-sm">Tap Start Call to begin hands-free conversation with Hermes 3 grounded in your Discord vault.</p>
+            </div>
+          </div>
+
+          <!-- Live Transcript / Spoken Preview -->
+          <div class="w-full max-w-lg bg-slate-900/90 border border-slate-800 rounded-2xl p-4 my-2 text-left">
+            <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>Live Transcript Stream</span>
+              <span id="transcribing-badge" class="hidden text-emerald-400 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> listening...
+              </span>
+            </div>
+            <p id="live-interim-text" class="text-sm text-slate-200 font-sans italic min-h-[40px]">
+              "Press 'Start Voice Call' and speak into your microphone..."
+            </p>
+          </div>
+
+          <!-- Bottom Call Controls Bar -->
+          <div class="w-full pt-4 flex flex-wrap items-center justify-center gap-4 border-t border-slate-800/80">
+            <button id="btn-toggle-call" onclick="toggleVoiceCall()" class="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-600/30 flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+              <span>Start Voice Call</span>
+            </button>
+
+            <button id="btn-mute-mic" onclick="toggleMute()" disabled class="p-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 transition-colors border border-slate-700" title="Mute Microphone">
+              <svg id="mic-icon-unmuted" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+              <svg id="mic-icon-muted" class="w-5 h-5 hidden text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+            </button>
+
+            <div class="flex items-center gap-2">
+              <label for="voice-select" class="text-xs text-slate-400">Voice:</label>
+              <select id="voice-select" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none">
+                <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Conversational)</option>
+                <option value="pNInz6obpgDQGcFmaJgB">Adam (Deep/Articulate)</option>
+                <option value="EXAVITQu4vr4xnSDxMaL">Bella (Warm/Expressive)</option>
+                <option value="ErXwobaYiN019PkySvjV">Antoni (Technical)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Real-Time Call Turn Log -->
+        <div class="lg:col-span-5 glass-card rounded-3xl p-6 flex flex-col h-[580px]">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Call Session History</span>
+            </h3>
+            <button onclick="clearVoiceLog()" class="text-xs text-slate-500 hover:text-slate-300">Clear</button>
+          </div>
+
+          <!-- Conversation Log Scroll Area -->
+          <div id="voice-turn-log" class="flex-1 overflow-y-auto space-y-4 pr-1 text-sm font-sans">
+            <div class="text-center text-xs text-slate-500 py-12">
+              Session is idle. Spoken turns, Hermes answers, and vault citations will stream here live.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: CHAT WITH HERMES (Grounded RAG)    -->
+    <!-- ========================================== -->
+    <section id="view-chat" class="tab-view hidden space-y-4">
+      <div class="glass-card rounded-2xl flex flex-col h-[700px] shadow-2xl overflow-hidden">
+        
+        <!-- Chat Header -->
+        <div class="p-4 border-b border-slate-800/80 bg-slate-900/60 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-lg bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-md">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>Nous Hermes 3 Intelligence</span>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">FTS5 Grounded</span>
+              </h3>
+              <p class="text-xs text-slate-400">Queries the 90-day archive with BM25, injects relevant Discord history into Hermes prompt.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="clearChatHistory()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors">Clear Chat</button>
+          </div>
+        </div>
+
+        <!-- Chat Messages Container -->
+        <div id="chat-messages-container" class="flex-1 overflow-y-auto p-6 space-y-6">
+          <!-- Initial Welcome Message -->
+          <div class="flex items-start gap-3">
+            <div class="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">TS</div>
+            <div class="max-w-2xl bg-slate-900/90 border border-slate-800 rounded-2xl rounded-tl-sm p-4 text-sm text-slate-200 space-y-2">
+              <p>Welcome to <strong>ThreadSift</strong>! I am your chat intelligence assistant powered by <strong>Nous Hermes 3</strong>.</p>
+              <p class="text-slate-400 text-xs">I have full-text indexing over your Discord conversation archive. Ask me questions or search through your team's conversations!</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="p-4 border-t border-slate-800/80 bg-slate-900/40">
+          <form onsubmit="handleChatSubmit(event)" class="flex gap-2">
+            <input 
+              type="text" 
+              id="chat-input" 
+              placeholder="Ask Hermes anything about your Discord archive..." 
+              class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+            <button type="submit" id="btn-send-chat" class="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2">
+              <span>Send</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: DISCORD INGESTION (ZERO BOT NEEDED) -->
+    <!-- ========================================== -->
+    <section id="view-export" class="tab-view hidden space-y-6">
+      <!-- Header Info Banner -->
+      <div class="glass-card rounded-2xl p-5 border-l-4 border-indigo-500">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>Discord Ingestion Center</span>
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-mono">No Bot & No Admin Rights Required</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-1">
+              You do not need to add a Discord bot or request admin permissions. Import your real exported Discord JSON files directly, or export channels using your personal account token.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Ingestion Methods -->
+        <div class="lg:col-span-6 space-y-6">
+          
+          <!-- METHOD 1: DRAG & DROP / FILE UPLOAD (EASIEST) -->
+          <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-mono">1</span>
+                <span>Direct File Upload (Easiest - 100% Offline)</span>
+              </h4>
+              <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Recommended</span>
+            </div>
+            <p class="text-xs text-slate-400">
+              Drag and drop an exported Discord JSON file from <strong>DiscordChatExporter GUI</strong> or a Discord Data Package.
+            </p>
+
+            <!-- Drag & Drop Zone -->
+            <div 
+              id="drop-zone" 
+              ondragover="handleDragOver(event)" 
+              ondragleave="handleDragLeave(event)" 
+              ondrop="handleFileDrop(event)"
+              onclick="document.getElementById('file-upload-input').click()"
+              class="border-2 border-dashed border-slate-700 hover:border-indigo-500/70 rounded-2xl p-6 text-center cursor-pointer transition-all bg-slate-900/40 hover:bg-slate-900/80 group"
+            >
+              <input type="file" id="file-upload-input" accept=".json" class="hidden" onchange="handleFileSelect(event)">
+              <svg class="w-8 h-8 mx-auto text-slate-500 group-hover:text-indigo-400 transition-colors mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              <div class="text-xs font-semibold text-slate-200">Click to browse or drop Discord JSON file here</div>
+              <div class="text-[11px] text-slate-500 mt-1 font-mono">Supports standard DiscordChatExporter JSON schema</div>
+            </div>
+          </div>
+
+          <!-- METHOD 2: CLI EXPORT WITH PERSONAL USER TOKEN -->
+          <div class="glass-card rounded-2xl p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center text-xs font-mono">2</span>
+                <span>Automated Exporter (Using Personal Token)</span>
+              </h4>
+              <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">No Bot Needed</span>
+            </div>
+
+            <!-- Collapsible Guide: How to get user token -->
+            <details class="text-xs bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+              <summary class="font-semibold text-indigo-400 hover:text-indigo-300 cursor-pointer flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>How to get your personal User Token in 10s (Zero Admin Rights)</span>
+              </summary>
+              <ol class="list-decimal list-inside space-y-1.5 mt-2.5 text-slate-300 text-[11px] leading-relaxed">
+                <li>Open Discord in your browser (Chrome/Edge/Firefox) at <code class="text-indigo-300">discord.com/app</code>.</li>
+                <li>Press <kbd class="px-1 py-0.5 bg-slate-800 rounded border border-slate-700">F12</kbd> (or Ctrl+Shift+I) and select the <strong>Network</strong> tab.</li>
+                <li>Click into any channel or type a message in Discord.</li>
+                <li>Click on any network request named <code class="text-indigo-300">messages</code> or <code class="text-indigo-300">@me</code>.</li>
+                <li>Scroll to <strong>Request Headers</strong> and copy the <code class="text-indigo-300">authorization</code> string.</li>
+                <li>Paste it below. <em>Leave "Bot Token" unchecked!</em></li>
+              </ol>
+            </details>
+
+            <div class="space-y-3 pt-1">
+              <div>
+                <label for="export-channel-id" class="block text-xs font-semibold text-slate-300 mb-1">Discord Channel ID *</label>
+                <input type="text" id="export-channel-id" placeholder="Right-click channel in Discord -> Copy Channel ID" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+
+              <div>
+                <label for="export-token" class="block text-xs font-semibold text-slate-300 mb-1">Personal Discord Token (Authorization) *</label>
+                <input type="password" id="export-token" placeholder="Paste your user authorization token here" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="export-days" class="block text-xs font-semibold text-slate-300 mb-1">History Window (Days)</label>
+                  <input type="number" id="export-days" value="90" min="1" max="365" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex flex-col justify-end">
+                  <label class="flex items-center gap-2 cursor-pointer pb-2.5">
+                    <input type="checkbox" id="export-is-bot" class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 h-4 w-4">
+                    <span class="text-xs text-slate-400">Is Bot Token (Leave OFF for user token)</span>
+                  </label>
+                </div>
+              </div>
+
+              <button onclick="runDiscordExport()" id="btn-run-export" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md shadow-indigo-600/25 flex items-center justify-center gap-2 mt-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Run Subprocess Export</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Side: Exporter Status & Log Output -->
+        <div class="lg:col-span-6 glass-card rounded-2xl p-6 shadow-xl flex flex-col space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h4 class="text-sm font-bold text-white font-mono">Ingestion Output & Status</h4>
+            <span id="export-status-badge" class="text-xs px-2.5 py-0.5 rounded-full font-mono bg-slate-800 text-slate-400">Idle</span>
+          </div>
+
+          <div id="export-log-output" class="flex-1 bg-slate-950 border border-slate-800/90 rounded-xl p-4 font-mono text-xs text-slate-300 min-h-[380px] overflow-y-auto whitespace-pre-wrap">
+ThreadSift Ingestion Console ready.
+- Drag and drop any real DiscordChatExporter JSON file on the left for instant zero-token ingestion.
+- Or paste your personal account token and channel ID to execute an automated export.
+          </div>
+
+          <!-- Vault Maintenance -->
+          <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Database Vault Management</span>
+            <button onclick="confirmClearVault()" class="text-xs px-3 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900/60 border border-red-800/60 text-red-300 transition-colors">
+              Clear All Vault Data
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: SYSTEM CONFIGURATION & SETTINGS    -->
+    <!-- ========================================== -->
+    <section id="view-settings" class="tab-view hidden space-y-6">
+      <div class="max-w-3xl mx-auto glass-card rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div>
+          <h3 class="text-lg font-bold text-white">System & AI Pipeline Configuration</h3>
+          <p class="text-xs text-slate-400 mt-1">Configure your local Hermes 3 endpoint, ElevenLabs voice keys, and vault preferences.</p>
+        </div>
+
+        <div class="space-y-4">
+          <!-- LLM Settings -->
+          <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
+            <h4 class="text-sm font-bold text-indigo-300 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+              <span>LLM Inference (Hermes 3 / Gemma / Ollama / vLLM)</span>
+            </h4>
+            
+            <div>
+              <label for="cfg-llm-url" class="block text-xs text-slate-400 mb-1">OpenAI-Compatible Base URL (Ollama: 11434, LM Studio: 1234)</label>
+              <input type="text" id="cfg-llm-url" value="http://localhost:11434/v1" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="cfg-llm-model" class="block text-xs text-slate-400 mb-1">Model Name</label>
+                <input type="text" id="cfg-llm-model" value="hermes3" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono">
+              </div>
+              <div>
+                <label for="cfg-llm-key" class="block text-xs text-slate-400 mb-1">API Key (if required)</label>
+                <input type="password" id="cfg-llm-key" placeholder="sk-..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono">
+              </div>
+            </div>
+          </div>
+
+          <!-- ElevenLabs Settings -->
+          <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
+            <h4 class="text-sm font-bold text-violet-300 flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+              <span>ElevenLabs Voice Synthesis (TTS)</span>
+            </h4>
+
+            <div>
+              <label for="cfg-eleven-key" class="block text-xs text-slate-400 mb-1">ElevenLabs API Key</label>
+              <input type="password" id="cfg-eleven-key" placeholder="xi-api-key..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono">
+              <p class="text-[11px] text-slate-500 mt-1">If blank or offline, ThreadSift seamlessly falls back to high-quality browser Web Speech Synthesis.</p>
+            </div>
+
+            <div>
+              <label for="cfg-eleven-voice" class="block text-xs text-slate-400 mb-1">Voice ID</label>
+              <input type="text" id="cfg-eleven-voice" value="21m00Tcm4TlvDq8ikWAM" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono">
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="flex justify-end gap-3 pt-2">
+            <button onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl text-xs transition-all shadow-md shadow-indigo-600/20">
+              Save Configuration
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-slate-950/80 text-slate-500 text-xs py-4 px-4 text-center font-mono">
+    <span>ThreadSift Local-First Chat Intelligence • Agent Skill Open Standard • SQLite FTS5 BM25 Engine</span>
+  </footer>
+
+  <!-- Main JavaScript Application -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
