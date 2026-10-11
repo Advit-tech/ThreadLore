@@ -222,33 +222,5 @@ Copy `.env.example` to `.env` to configure your preferences:
 
 ---
 
-## 🎙️ Live Voice-Call Pipeline Mechanics
-
-```
-User Speaks Microphone
-        │
-        ▼
-[Browser Web Speech STT]
-        │
-        ▼ (Transcribed Text)
-[FastAPI /api/voice/call-turn]
-        │
-        ▼
-[SQLite FTS5 BM25 Retrieval (90-Day Vault)]
-        │
-        ▼ (Grounded Messages Context)
-[Nous Research Hermes 3 LLM]
-        │
-        ▼ (Spoken Natural English Text)
-[ElevenLabs TTS REST API / Web Audio Player]
-        │
-        ▼ (Auto-Playback)
-User Hears Synthesized Answer
-```
-
-If ElevenLabs credentials are not configured, the system automatically routes spoken audio through the browser's native `SpeechSynthesis` API with zero downtime.
-
----
-
 ## 🛡️ License
 MIT License. Built for local privacy and high-speed chat intelligence.
